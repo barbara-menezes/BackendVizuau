@@ -1,22 +1,21 @@
 import Usuario_Profissionais from "../models/Usuario_Profissionais";
+import Usuario_Administradores from "../models/Usuario_Administradores";
 import Usuario_Clientes from "../models/Usuario_Clientes";
 import Endereco from "../models/Endereco";
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import bcrypt from "bcryptjs";
 import * as Yup from "yup";
+import Usuario from "../models/Usuario";
+import Token_Senha from "../models/Token_Senha";
+import authConfig from '../../config/auth';
+import mailer from '../../config/mailer';
 
 function cryptPass(senha) {
   if (senha) {
     return bcrypt.hash(senha, 10);
   }
 }
-
-import Usuario from "../models/Usuario";
-import Token_Senha from "../models/Token_Senha";
-import authConfig from '../../config/auth';
-
-import mailer from '../../config/mailer';
 
 function generateToken(params = {}) {
   const token = jwt.sign(params, authConfig.secret, {
@@ -41,8 +40,18 @@ class SessionController {
     const { email, senha } = req.body;
 
     const usuarioEmail = await Usuario.findOne({ where: { email: email } });
+    console.log(usuarioEmail)
 
     let usuario = '';
+    let user = '';
+    
+    if(usuarioEmail){
+      (user = usuarioEmail);
+    }
+    
+    if (!user) {
+      return res.status(401).json({ error: 'Usuario Não existe' });
+    }
 
     if(usuarioEmail.id_tipo_usuario === 1){
       usuario = await Usuario.findOne({ where: { email: email }, 
@@ -72,33 +81,19 @@ class SessionController {
       });
     }
 
-    let user = '';
-
-    if(usuarioEmail){
-      (user = usuarioEmail);
-    }
-    
-    if (!user) {
-      return res.status(401).json({ error: 'Usuario Não existe' });
-    }
-
     if (!(await user.checkPassword(senha))) {
       return res.status(401).json({ error: 'Senha Invalida' });
     }
 
     user.senha=undefined;
 
-    try{
-      return res.status(200).json({
-        usuario,
-        token: generateToken({
-          id_usuario: user.id,
-          tipo_usuario: user.id_tipo_usuario
-        })
-      });
-    }catch (err) {
-      console.log("ERRO: " + err);
-    }
+    return res.status(200).json({
+      usuario,
+      token: generateToken({
+        id_usuario: user.id,
+        tipo_usuario: user.id_tipo_usuario
+      })
+    });
   }
 
   // async forgotpassword(req, res){
