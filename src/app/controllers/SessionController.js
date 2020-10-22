@@ -44,6 +44,11 @@ class SessionController {
 
     let usuario = '';
 
+    if(usuarioEmail.id_tipo_usuario === 1){
+      usuario = await Usuario.findOne({ where: { email: email }, 
+        attributes: ["id", "nome", "email", "id_tipo_usuario"]
+      });
+    }
     if(usuarioEmail.id_tipo_usuario === 2){
       usuario = await Usuario_Profissionais.findOne({ 
         where: { id_usuario: usuarioEmail.id },
@@ -83,13 +88,17 @@ class SessionController {
 
     user.senha=undefined;
 
-    return res.status(200).json({
-      usuario,
-      token: generateToken({
-        id_usuario: user.id,
-        tipo_usuario: user.id_tipo_usuario
-      })
-    });
+    try{
+      return res.status(200).json({
+        usuario,
+        token: generateToken({
+          id_usuario: user.id,
+          tipo_usuario: user.id_tipo_usuario
+        })
+      });
+    }catch (err) {
+      console.log("ERRO: " + err);
+    }
   }
 
   // async forgotpassword(req, res){
