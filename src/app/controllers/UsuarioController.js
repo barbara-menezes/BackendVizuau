@@ -56,5 +56,9 @@ class UsuarioController {
       return res.status(200).json({ error: false });
     }
   }
+
+  getUserById(id) {
+    return Usuario.findByPk(id);
+  }
 }
 export default new UsuarioController();

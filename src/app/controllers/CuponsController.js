@@ -1,7 +1,5 @@
-import jwt from "jsonwebtoken";
 import Cupons from "../models/Cupons";
-import Usuario_Profissionais from "../models/Usuario_Profissionais";
-import Endereco from "../models/Endereco";
+import { QueueProdutor } from "../queues/QueueProdutor";
 
 class CuponsController {
   async store(req, res) {
@@ -9,7 +7,7 @@ class CuponsController {
     await Cupons.create(
       {
         valor: req.body.cupons.valor,
-        status: req.body.cupons.status,
+        status: "AGUARDANDO_LIBERACAO",
         validade: req.body.cupons.validade,
         quantidade: req.body.cupons.quantidade
       }
@@ -71,19 +69,47 @@ class CuponsController {
   }
 
   async delete(req, res) {
-    const cupons = await Cupons.findOne({
-      where: { id: req.params.id },
-    });
-    await cupons.destroy().then(() => {
-        return res.status(201).json({
-          message: "Cupom deletado com sucesso!"
-        });
-      })
-      .catch(err => {
-        console.log("ERRO: " + err);
-      });
+    try {
+      const { id } = req.params;
+      const idCupom = Number(id);
+      await Cupons.update({ status: "CANCELANDO" }, { where: { id: cumpoId }});
+      const produtor = new QueueProdutor("agendamentos", "cancelar.cupons.agendamento");
+      await produtor.publish({ idCupom });
+      return res.status(200).send({ mensagem: "O Cupom está sendo cancelado"});
+    } catch(e) {
+      return res.status(500).send({ mensagem: "Ocorreu um erro ao cancelar o cupom, tente novamente mais tarde"});
+    }
   }
 
+  async aplicarCupom(cupom) {
+    const quantidade = cupom.quantidade - 1;
+    const status = cupom.quantidade === 0 ? "ESGOTADO" : "LIBERADO";
+    await Cupons.update({ quantidade, status }, { where: {id: cupom.id }});
+  }
+
+  async oberCupomDisponivel() {
+    const cupom =  await Cupons.findOne({
+      where: { status: "LIBERADO", }
+    }).toJSON();
+    if(cupom && cupom.validade < new Date())
+      await Cupons.update({ stauts: "INVALIDO"}, {where: {id: cupom.id}});
+    else
+      return cupom;
+  }
+
+  async reverterAplicacao(cupomId) {
+    if(!cupomId) return;
+    const cupom =  await Cupons.findOne({
+      where: { id: cupomId, }
+    }).toJSON();
+    const quantidade = cupom.quantidade + 1;
+    const status = cupom.status === "ESGOTADO" ? "LIBERADO" : cupom.status;
+    await Cupons.update({ quantidade, status }, { where: {id: cumpoId }});
+  }
+
+  async cancelarCupom(id) {
+    await cupomCriado.update({status: 'CANCELADO'}, { where: { id }});
+  }
 }
 
 export default new CuponsController();

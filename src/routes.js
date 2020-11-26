@@ -7,18 +7,7 @@ import UsuarioProfissionaisController from "./app/controllers/UsuarioProfissiona
 import CuponsController from "./app/controllers/CuponsController";
 import ServicosController from "./app/controllers/ServicosController";
 import AgendamentosController from "./app/controllers/AgendamentosController";
-//import UsuarioController from "./app/controllers/UsuarioController";
-//import validateUsuarioStore from "./app/validators/UsuarioStore";
-// import validateEnderecoStore from "./app/validators/EnderecoStore";
-// import validatePcdStore from "./app/validators/PcdStore";
-// import validateEmpresaStore from "./app/validators/EmpresaStore";
-// import validateFreelancerStore from "./app/validators/FreelancerStore";
-// import validateUsuarioUpdate from "./app/validators/UsuarioUpdate";
-// import validateEnderecoUpdate from "./app/validators/EnderecoUpdate";
-// import validatePcdUpdate from "./app/validators/PcdUpdate";
-// import validateEmpresaUpdate from "./app/validators/EmpresaUpdate";
-// import validateFreelancerUpdate from "./app/validators/FreelancerUpdate";
-// import validateVagasUpdate from "./app/validators/VagasUpdate";
+import AgendamentoProdutorController from "./app/controllers/AgendamentoProdutorController";
 
 import authMiddleware from "./app/middlewares/auth";
 
@@ -71,10 +60,7 @@ routes.post(
 
 routes.post(
   "/agendamentos",
-  // validatePcdStore,
-  // validateUsuarioStore,
-  // validateEnderecoStore,
-  AgendamentosController.store
+  AgendamentoProdutorController.agendar
 );
 
 routes.put(
@@ -135,7 +121,7 @@ routes.get("/usuarios/administradores", UsuarioAdministradoresController.index);
 
 routes.get("/cupons", CuponsController.index);
 routes.get("/cupons/:id", CuponsController.showById);
-routes.delete("/cupons/:id", CuponsController.delete);
+routes.delete("/cupons/:id", AgendamentoProdutorController.cancelarCupom);
 
 routes.get("/servicos", ServicosController.index);
 routes.get("/servicos/:id", ServicosController.showById);
@@ -146,6 +132,9 @@ routes.get("/agendamentos", AgendamentosController.index);
 routes.get("/agendamentos/:id", AgendamentosController.showById);
 routes.get("/agendamentos/profissionais/:id", AgendamentosController.showByProfissional);
 routes.get("/agendamentos/clientes/:id", AgendamentosController.showByClientes);
+
+routes.delete("/agendamentos/:id", AgendamentoProdutorController.cancelarAgendamento);
+
 
 // routes.post(
 //   "/vagas",

@@ -2,28 +2,31 @@ import Agendamentos from "../models/Agendamentos";
 import Servicos from "../models/Servicos";
 import Usuario_Clientes from "../models/Usuario_Clientes";
 import Usuario_Profissionais from "../models/Usuario_Profissionais";
+import Usuario from "../models/Usuario";
 import Cupons from "../models/Cupons";
+import { QueueProdutor } from "../queues/QueueProdutor";
+import { QueueConsumidor } from "../queues/QueueConsumidor";
+import CuponsController from "./CuponsController";
+import { enviarMensagemParaCliente, enviarMensagemParaFornecedor } from "./NotificationController";
 
 class AgendamentosController {
-  async store(req, res) {
-    try {
-      const {
-        servicos,
-        ...data
-      } = req.body;
 
-      const agendamentos = await Agendamentos.create(data);
+  getAgendamento(payload){
+    return Agendamentos.find({ where: payload });
+  }
 
-      if (servicos && servicos.length > 0){
-        agendamentos.setServicos(servicos);
-      }
+  atualizar(atualizacao, id){
+    return Agendamentos.update(atualizacao, { where: { id }});
+  }
 
-      return res.status(200).json(agendamentos);
-    } catch (err) {
-      return res.status(500).json({
-        err,
-      });
-    }
+  getAgendamentoById(idAgendamento) {
+    return Agendamentos.findByPk(idAgendamento); 
+  }
+
+  async criarAgendamento(agendamento, servicos){
+    const agendamentoCriado = await Agendamentos.create({...agendamento, status: "AGUARDANDO_APROVACAO"});
+    await agendamentoCriado.setServicos(servicos);
+    return agendamentoCriado;
   }
 
   async index(req, res) {

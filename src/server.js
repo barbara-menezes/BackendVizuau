@@ -1,3 +1,5 @@
 import app from './app';
+import agendamentoConsumidorController from './app/controllers/AgendamentoConsumidorController';
 
-app.listen(process.env.PORT|| 8080)
+agendamentoConsumidorController.init();
+app.listen(process.env.PORT|| 8080);

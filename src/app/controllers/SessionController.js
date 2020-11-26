@@ -6,16 +6,18 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import bcrypt from "bcryptjs";
 import * as Yup from "yup";
-import Usuario from "../models/Usuario";
-import Token_Senha from "../models/Token_Senha";
-import authConfig from '../../config/auth';
-import mailer from '../../config/mailer';
 
 function cryptPass(senha) {
   if (senha) {
     return bcrypt.hash(senha, 10);
   }
 }
+
+import Usuario from "../models/Usuario";
+import Token_Senha from "../models/Token_Senha";
+import authConfig from '../../config/auth';
+
+import mailer from '../../config/mailer';
 
 function generateToken(params = {}) {
   const token = jwt.sign(params, authConfig.secret, {
@@ -40,19 +42,9 @@ class SessionController {
     const { email, senha } = req.body;
 
     const usuarioEmail = await Usuario.findOne({ where: { email: email } });
-    console.log(usuarioEmail)
 
     let usuario = '';
-    let user = '';
-    
-    if(usuarioEmail){
-      (user = usuarioEmail);
-    }
-    
-    if (!user) {
-      return res.status(401).json({ error: 'Usuario Não existe' });
-    }
-
+    console.log(usuarioEmail.id_tipo_usuario);
     if(usuarioEmail.id_tipo_usuario === 1){
       usuario = await Usuario.findOne({ where: { email: email }, 
         attributes: ["id", "nome", "email", "id_tipo_usuario"]
@@ -79,6 +71,16 @@ class SessionController {
           attributes: ["id", "estado", "cidade", "bairro", "cep", "logradouro", "numero", "complemento", "latitude", "longitude"]}
         ]
       });
+    }
+
+    let user = '';
+
+    if(usuarioEmail){
+      (user = usuarioEmail);
+    }
+    
+    if (!user) {
+      return res.status(401).json({ error: 'Usuario Não existe' });
     }
 
     if (!(await user.checkPassword(senha))) {
