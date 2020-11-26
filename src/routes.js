@@ -51,6 +51,11 @@ routes.post(
 );
 
 routes.post(
+  "/cupons/:id/liberar",
+  CuponsController.liberarCupom
+);
+
+routes.post(
   "/servicos",
   // validatePcdStore,
   // validateUsuarioStore,

@@ -20,7 +20,6 @@ function cryptPass(senha) {
 
 class Usuario_ProfissionaisController {
   async store(req, res) {
-    console.log(req.body);
     const emailExists = await Usuario.findOne({
       where: { email: req.body.usuario.email }
     });
@@ -136,6 +135,16 @@ class Usuario_ProfissionaisController {
       profissionaisData.Endereco.update(endereco)
     );
     return res.status(201).json({ profissionais });
+  }
+
+  async getDeviceToken(id) {
+    const clientesData = await Usuario_Profissionais.findOne({
+      where: { id },
+      include: [
+        { model: Usuario, as: "Usuario",  attributes: ["device_token", "id"] }
+      ]
+    });
+    return clientesData;
   }
 }
 

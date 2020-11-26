@@ -1,11 +1,11 @@
 import Usuario_Profissionais from "../models/Usuario_Profissionais";
-import Usuario_Administradores from "../models/Usuario_Administradores";
 import Usuario_Clientes from "../models/Usuario_Clientes";
+import Usuario_Administradores from "../models/Usuario_Administradores";
 import Endereco from "../models/Endereco";
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
 import bcrypt from "bcryptjs";
 import * as Yup from "yup";
+import UsuarioController from "./UsuarioController";
 
 function cryptPass(senha) {
   if (senha) {
@@ -14,10 +14,7 @@ function cryptPass(senha) {
 }
 
 import Usuario from "../models/Usuario";
-import Token_Senha from "../models/Token_Senha";
 import authConfig from '../../config/auth';
-
-import mailer from '../../config/mailer';
 
 function generateToken(params = {}) {
   const token = jwt.sign(params, authConfig.secret, {
@@ -44,10 +41,12 @@ class SessionController {
     const usuarioEmail = await Usuario.findOne({ where: { email: email } });
 
     let usuario = '';
-    console.log(usuarioEmail.id_tipo_usuario);
     if(usuarioEmail.id_tipo_usuario === 1){
-      usuario = await Usuario.findOne({ where: { email: email }, 
-        attributes: ["id", "nome", "email", "id_tipo_usuario"]
+      usuario = await Usuario_Administradores.findOne(
+        { where: { id_usuario: usuarioEmail.id  }, 
+        include: [
+          { model: Usuario, as: "Usuario",
+          attributes: ["id", "nome", "email"] }],
       });
     }
     if(usuarioEmail.id_tipo_usuario === 2){
@@ -55,7 +54,7 @@ class SessionController {
         where: { id_usuario: usuarioEmail.id },
         include: [
           { model: Usuario, as: "Usuario",
-          attributes: ["nome", "email"] },
+          attributes: ["id", "nome", "email"] },
           { model: Endereco, as: "Endereco", 
           attributes: ["id", "estado", "cidade", "bairro", "cep", "logradouro", "numero", "complemento", "latitude", "longitude"]}
         ]
@@ -66,7 +65,7 @@ class SessionController {
         where: { id_usuario: usuarioEmail.id },
         include: [
           { model: Usuario, as: "Usuario",
-          attributes: ["nome", "email"] },
+          attributes: ["id", "nome", "email"] },
           { model: Endereco, as: "Endereco", 
           attributes: ["id", "estado", "cidade", "bairro", "cep", "logradouro", "numero", "complemento", "latitude", "longitude"]}
         ]
@@ -88,7 +87,7 @@ class SessionController {
     }
 
     user.senha=undefined;
-
+    await UsuarioController.updateDeviceToken(usuario.Usuario.id, req.headers["device-token"]);
     return res.status(200).json({
       usuario,
       token: generateToken({

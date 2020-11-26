@@ -7,6 +7,7 @@ import bcrypt from "bcryptjs";
 import { Router } from "express";
 import authMiddleware from "../middlewares/auth";
 import Sequelize from 'sequelize';
+import Usuario_clientes from "../models/Usuario_Clientes";
 const routes = new Router();
 const Op = Sequelize.Op;
 
@@ -34,7 +35,6 @@ class UsuarioClientesController {
     if (emailExists) {
       return res.status(400).json({ error: "Email ja esta em uso." });
     }
-
     await Usuario_Clientes.create(
       {
         Usuario: req.body.usuario,
@@ -130,6 +130,21 @@ class UsuarioClientesController {
       clientesData.Endereco.update(endereco)
     );
     return res.status(201).json({ clientes });
+  }
+
+  getDeviceToken(id) {
+    return Usuario_Clientes.findOne({
+      where: { id },
+      include: [
+        { model: Usuario, as: "Usuario",  attributes: ["device_token"] }
+      ]
+    });
+  }
+
+  findAll(){
+    return Usuario_Clientes.findAll({ include: [
+      { model: Usuario, as: "Usuario",  attributes: ["device_token"] }
+    ]})
   }
 }
 

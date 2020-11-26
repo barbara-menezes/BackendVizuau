@@ -60,5 +60,9 @@ class UsuarioController {
   getUserById(id) {
     return Usuario.findByPk(id);
   }
+
+  updateDeviceToken(idUser, deviceToken){
+    return Usuario.update({ device_token: deviceToken }, {where: {id: idUser }});
+  }
 }
 export default new UsuarioController();

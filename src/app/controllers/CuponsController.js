@@ -1,5 +1,7 @@
 import Cupons from "../models/Cupons";
 import { QueueProdutor } from "../queues/QueueProdutor";
+import { sendMessageAllClientes } from "./NotificationController";
+import UsuarioClientesController from "./UsuarioClientesController";
 
 class CuponsController {
   async store(req, res) {
@@ -72,7 +74,7 @@ class CuponsController {
     try {
       const { id } = req.params;
       const idCupom = Number(id);
-      await Cupons.update({ status: "CANCELANDO" }, { where: { id: cumpoId }});
+      await Cupons.update({ status: "CANCELANDO" }, { where: { id: idCupom }});
       const produtor = new QueueProdutor("agendamentos", "cancelar.cupons.agendamento");
       await produtor.publish({ idCupom });
       return res.status(200).send({ mensagem: "O Cupom está sendo cancelado"});
@@ -90,7 +92,7 @@ class CuponsController {
   async oberCupomDisponivel() {
     const cupom =  await Cupons.findOne({
       where: { status: "LIBERADO", }
-    }).toJSON();
+    });
     if(cupom && cupom.validade < new Date())
       await Cupons.update({ stauts: "INVALIDO"}, {where: {id: cupom.id}});
     else
@@ -101,14 +103,32 @@ class CuponsController {
     if(!cupomId) return;
     const cupom =  await Cupons.findOne({
       where: { id: cupomId, }
-    }).toJSON();
+    });
     const quantidade = cupom.quantidade + 1;
     const status = cupom.status === "ESGOTADO" ? "LIBERADO" : cupom.status;
-    await Cupons.update({ quantidade, status }, { where: {id: cumpoId }});
+    await Cupons.update({ quantidade, status }, { where: {id: cupomId }});
   }
 
-  async cancelarCupom(id) {
-    await cupomCriado.update({status: 'CANCELADO'}, { where: { id }});
+  async liberarCupom(req, res) {
+    try {
+      const { id } = req.params;
+      const idCupom = Number(id);
+      await Cupons.update({ status: "LIBERADO"}, { where: { id: idCupom }});
+      sendMessageAllClientes("cupom disponível", "um novo cupom está disponível");
+      return res.status(200).send({ mensagem: "Cupom liberado com sucesso"});
+    } catch(e) {
+      console.log(e);
+      return res.status(500).send({ mensagem: "Ocorreu um erro ao liberar o cupom, tente novamente mais tarde"});
+    }
+  }
+
+
+  cancelarCupom(id) {
+    return this.atualizar({status: 'CANCELADO'}, id);
+  }
+
+  atualizar(payload, id) {
+    return Cupons.update(payload, { where: { id } });
   }
 }
 

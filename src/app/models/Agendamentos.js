@@ -24,6 +24,7 @@ class Agendamentos extends Model {
       as: "servicos",
       foreignKey: 'id_agendamentos'
     });
+    this.belongsTo(models.Usuario_clientes, {as:"Cliente",foreignKey: 'id_cliente'});
   };
 }
 

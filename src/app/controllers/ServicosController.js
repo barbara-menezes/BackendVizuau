@@ -67,7 +67,7 @@ class ServicosController {
       where: {
         id_usuario_profissional: req.params.id,
       },
-      attributes: ["id", "nome", "valor"],
+      attributes: ["id", "nome", "valor", "id_usuario_profissional"],
     })
     .then(servicos => {
       return res.status(201).json({
